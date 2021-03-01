@@ -239,70 +239,62 @@ def gen_and_reprocess_nbest(args):
                 rescore_file + "source_prefix_frac" + str(args.source_prefix_frac)
             )
 
-        if not args.right_to_left1 or not args.right_to_left2:
-            if not args.diff_bpe:
+        if (
+            not args.right_to_left1 or not args.right_to_left2
+        ) and not args.diff_bpe:
+            rerank_utils.write_reprocessed(
+                gen_output.source,
+                gen_output.hypo,
+                gen_output.target,
+                pre_gen + rescore_file + "." + args.source_lang,
+                pre_gen + rescore_file + "." + args.target_lang,
+                pre_gen + "/reference_file",
+                bpe_symbol=args.post_process,
+            )
+            if args.prefix_len is not None:
+                bw_rescore_file = prefix_len_rescore_file
                 rerank_utils.write_reprocessed(
                     gen_output.source,
                     gen_output.hypo,
                     gen_output.target,
-                    pre_gen + rescore_file + "." + args.source_lang,
-                    pre_gen + rescore_file + "." + args.target_lang,
+                    pre_gen + bw_rescore_file + "." + args.source_lang,
+                    pre_gen + bw_rescore_file + "." + args.target_lang,
                     pre_gen + "/reference_file",
+                    prefix_len=args.prefix_len,
                     bpe_symbol=args.post_process,
                 )
-                if args.prefix_len is not None:
-                    bw_rescore_file = prefix_len_rescore_file
-                    rerank_utils.write_reprocessed(
-                        gen_output.source,
-                        gen_output.hypo,
-                        gen_output.target,
-                        pre_gen + prefix_len_rescore_file + "." + args.source_lang,
-                        pre_gen + prefix_len_rescore_file + "." + args.target_lang,
-                        pre_gen + "/reference_file",
-                        prefix_len=args.prefix_len,
-                        bpe_symbol=args.post_process,
-                    )
-                elif args.target_prefix_frac is not None:
-                    bw_rescore_file = target_prefix_frac_rescore_file
-                    rerank_utils.write_reprocessed(
-                        gen_output.source,
-                        gen_output.hypo,
-                        gen_output.target,
-                        pre_gen
-                        + target_prefix_frac_rescore_file
-                        + "."
-                        + args.source_lang,
-                        pre_gen
-                        + target_prefix_frac_rescore_file
-                        + "."
-                        + args.target_lang,
-                        pre_gen + "/reference_file",
-                        bpe_symbol=args.post_process,
-                        target_prefix_frac=args.target_prefix_frac,
-                    )
-                else:
-                    bw_rescore_file = rescore_file
 
-                if args.source_prefix_frac is not None:
-                    fw_rescore_file = source_prefix_frac_rescore_file
-                    rerank_utils.write_reprocessed(
-                        gen_output.source,
-                        gen_output.hypo,
-                        gen_output.target,
-                        pre_gen
-                        + source_prefix_frac_rescore_file
-                        + "."
-                        + args.source_lang,
-                        pre_gen
-                        + source_prefix_frac_rescore_file
-                        + "."
-                        + args.target_lang,
-                        pre_gen + "/reference_file",
-                        bpe_symbol=args.post_process,
-                        source_prefix_frac=args.source_prefix_frac,
-                    )
-                else:
-                    fw_rescore_file = rescore_file
+            elif args.target_prefix_frac is not None:
+                bw_rescore_file = target_prefix_frac_rescore_file
+                rerank_utils.write_reprocessed(
+                    gen_output.source,
+                    gen_output.hypo,
+                    gen_output.target,
+                    (((pre_gen + bw_rescore_file) + ".") + args.source_lang),
+                    (((pre_gen + bw_rescore_file) + ".") + args.target_lang),
+                    pre_gen + "/reference_file",
+                    bpe_symbol=args.post_process,
+                    target_prefix_frac=args.target_prefix_frac,
+                )
+
+            else:
+                bw_rescore_file = rescore_file
+
+            if args.source_prefix_frac is None:
+                fw_rescore_file = rescore_file
+
+            else:
+                fw_rescore_file = source_prefix_frac_rescore_file
+                rerank_utils.write_reprocessed(
+                    gen_output.source,
+                    gen_output.hypo,
+                    gen_output.target,
+                    (((pre_gen + fw_rescore_file) + ".") + args.source_lang),
+                    (((pre_gen + fw_rescore_file) + ".") + args.target_lang),
+                    pre_gen + "/reference_file",
+                    bpe_symbol=args.post_process,
+                    source_prefix_frac=args.source_prefix_frac,
+                )
 
         if args.right_to_left1 or args.right_to_left2:
             rerank_utils.write_reprocessed(
@@ -325,10 +317,10 @@ def gen_and_reprocess_nbest(args):
         ):
 
             if args.backwards1 or args.backwards2:
-                if args.backwards_score_dict_dir is not None:
-                    bw_dict = args.backwards_score_dict_dir
-                else:
+                if args.backwards_score_dict_dir is None:
                     bw_dict = args.score_dict_dir
+                else:
+                    bw_dict = args.backwards_score_dict_dir
                 bw_preprocess_param = [
                     "--source-lang",
                     scorer1_src,

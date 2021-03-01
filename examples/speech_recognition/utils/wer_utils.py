@@ -62,10 +62,7 @@ def trimWhitespace(str):
 
 def str2toks(str):
     pieces = trimWhitespace(str).split(" ")
-    toks = []
-    for p in pieces:
-        toks.append(Token(p, 0.0, 0.0))
-    return toks
+    return [Token(p, 0.0, 0.0) for p in pieces]
 
 
 class EditDistance(object):
@@ -90,7 +87,7 @@ class EditDistance(object):
         else:
             if code == Code.match:
                 return 0
-            elif code == Code.insertion or code == Code.deletion:
+            elif code in [Code.insertion, Code.deletion]:
                 return 3
             else:  # substitution
                 return 4
@@ -319,25 +316,23 @@ class WERTransformer(object):
 
     def wer(self):
         if self.words_ == 0:
-            wer = np.nan
+            return np.nan
         else:
-            wer = (
+            return (
                 100.0
                 * (self.insertions_ + self.deletions_ + self.substitutions_)
                 / self.words_
             )
-        return wer
 
     def stats(self):
         if self.words_ == 0:
-            stats = {}
-        else:
-            wer = (
-                100.0
-                * (self.insertions_ + self.deletions_ + self.substitutions_)
-                / self.words_
-            )
-            stats = dict(
+            return {}
+        wer = (
+            100.0
+            * (self.insertions_ + self.deletions_ + self.substitutions_)
+            / self.words_
+        )
+        return dict(
                 {
                     "wer": wer,
                     "utts": self.utts_,
@@ -348,7 +343,6 @@ class WERTransformer(object):
                     "confusion_pairs": self.ed_.confusion_pairs_,
                 }
             )
-        return stats
 
 
 def calc_wer(hyp_str, ref_str):

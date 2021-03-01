@@ -12,8 +12,7 @@ class ListDataset(BaseWrapperDataset):
         self._sizes = sizes
 
     def __iter__(self):
-        for x in self.dataset:
-            yield x
+        yield from self.dataset
 
     def collater(self, samples):
         return samples

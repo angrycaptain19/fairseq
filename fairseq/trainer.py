@@ -1072,17 +1072,19 @@ class Trainer(object):
         logging outputs are scalars and can be summed. Note that
         *logging_outputs* cannot contain any nested dicts/lists.
         """
-        data = {}
-        for i, stat in enumerate(extra_stats_to_sum):
-            data["extra_stats_" + str(i)] = stat
-        if len(logging_outputs) > 0:
+        data = {
+            "extra_stats_" + str(i): stat
+            for i, stat in enumerate(extra_stats_to_sum)
+        }
+
+        if logging_outputs:
             log_keys = list(logging_outputs[0].keys())
             for k in log_keys:
-                if not ignore:
-                    v = sum(log[k] for log in logging_outputs if k in log)
-                else:
+                if ignore:
                     v = logging_outputs[0][k]
                     v = torch.zeros_like(v) if torch.is_tensor(v) else 0
+                else:
+                    v = sum(log[k] for log in logging_outputs if k in log)
                 data["logging_outputs_" + k] = v
         else:
             log_keys = None
@@ -1094,10 +1096,10 @@ class Trainer(object):
         extra_stats_to_sum = [
             data["extra_stats_" + str(i)] for i in range(len(extra_stats_to_sum))
         ]
-        if log_keys is not None:
-            logging_outputs = [{k: data["logging_outputs_" + k] for k in log_keys}]
-        else:
+        if log_keys is None:
             logging_outputs = []
+        else:
+            logging_outputs = [{k: data["logging_outputs_" + k] for k in log_keys}]
         return logging_outputs, extra_stats_to_sum
 
     def _check_grad_norms(self, grad_norm):

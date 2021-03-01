@@ -72,10 +72,9 @@ def pack_constraints(batch_constraints: List[List[torch.Tensor]]) -> torch.Tenso
         if len(sentence_constraints):
             # number of constraints, plus sum of constrain lens, plus a zero after each
             constraints_len = (
-                1
-                + sum([c.size(0) for c in sentence_constraints])
-                + len(sentence_constraints)
-            )
+                1 + sum(c.size(0) for c in sentence_constraints)
+            ) + len(sentence_constraints)
+
             max_constraints_len = max(max_constraints_len, constraints_len)
 
     batch_size = len(batch_constraints)
@@ -100,7 +99,7 @@ def unpack_constraints(constraint_tensor: torch.Tensor) -> List[torch.Tensor]:
     num_constraints = constraint_tensor[0]
     constraints = constraint_tensor.tolist()
     offset = 1
-    for i in range(num_constraints):
+    for _ in range(num_constraints):
         where = constraints.index(0, offset)
         constraint_list.append(constraint_tensor[offset:where])
         offset = where + 1
@@ -154,12 +153,11 @@ class ConstraintNode:
     def print_graph(node: "ConstraintNode"):
         if len(node.children) == 0:
             return str(node)
-        else:
-            s = f"({node}"
-            for child in node.children.values():
-                s += " " + ConstraintNode.print_graph(child)
-            s += ")"
-            return s
+        s = f"({node}"
+        for child in node.children.values():
+            s += " " + ConstraintNode.print_graph(child)
+        s += ")"
+        return s
 
     def token_counts(self) -> Counter:
         """Returns a counter of the number of times each token is used
@@ -167,7 +165,7 @@ class ConstraintNode:
         """
         token_counts = Counter()
         kids = list(self.children.values())
-        while len(kids) > 0:
+        while kids:
             kid = kids.pop()
             token_counts[kid.id] += kid.num_constraints
             kids += list(kid.children.values())
@@ -233,12 +231,11 @@ class UnorderedConstraintState(ConstraintState):
         return UnorderedConstraintState(constraint_trie_root)
 
     def __str__(self):
-        gen_str = ",".join([str(node) for node in self.generated])
+        gen_str = ",".join(str(node) for node in self.generated)
         return f"{self.name}/{self.bank}({gen_str})x{self.num_completed}"
 
     def __copy__(self):
-        copied_state = UnorderedConstraintState(self.node, copy_from=self)
-        return copied_state
+        return UnorderedConstraintState(self.node, copy_from=self)
 
     def copy(self):
         return self.__copy__()
@@ -411,10 +408,9 @@ class OrderedConstraintState(ConstraintState):
     def num_completed(self):
         if self.state == -1:
             return 0
-        count = len(
+        return len(
             list(filter(lambda x: x, self.sequence.endpoints[0 : self.state + 1]))
         )
-        return count
 
     @property
     def is_root(self):
@@ -486,21 +482,19 @@ class OrderedConstraintState(ConstraintState):
 
         if self.finished:
             # Accept anything
-            next_state = self.copy()
+            return self.copy()
 
         elif self.sequence[self.state + 1] == token:
             # Advance to the next token
-            next_state = OrderedConstraintState(self.sequence, self.state + 1)
+            return OrderedConstraintState(self.sequence, self.state + 1)
 
         elif self.sequence.endpoints[self.state]:
             # Accept anything between constraints (*)
-            next_state = self.copy()
+            return self.copy()
 
         elif token == self.sequence[0]:
             # Start over having generated the first token
-            next_state = OrderedConstraintState(self.sequence, 0)
+            return OrderedConstraintState(self.sequence, 0)
         else:
             # Start over from the root
-            next_state = OrderedConstraintState(self.sequence, -1)
-
-        return next_state
+            return OrderedConstraintState(self.sequence, -1)

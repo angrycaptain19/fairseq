@@ -147,8 +147,8 @@ def write_reprocessed(
     ), "in writing reprocessed, only one type of prefix may be used"
 
     with open(source_outfile, "w") as source_file, open(
-        hypo_outfile, "w"
-    ) as hypo_file, open(target_outfile, "w") as target_file:
+            hypo_outfile, "w"
+        ) as hypo_file, open(target_outfile, "w") as target_file:
 
         assert len(sources) == len(hypos), "sources and hypos list length mismatch"
         if right_to_left:
@@ -170,7 +170,6 @@ def write_reprocessed(
                         )
                         hypo_file.write(shortened)
                         source_file.write(sources[i])
-                        target_file.write(targets[i])
                     elif target_prefix_frac is not None:
                         num_words, shortened, num_bpe_tokens = calc_length_from_frac(
                             hypos[i][j], target_prefix_frac, bpe_symbol
@@ -178,7 +177,6 @@ def write_reprocessed(
                         shortened += "\n"
                         hypo_file.write(shortened)
                         source_file.write(sources[i])
-                        target_file.write(targets[i])
                     elif source_prefix_frac is not None:
                         num_words, shortened, num_bpe_tokensn = calc_length_from_frac(
                             sources[i], source_prefix_frac, bpe_symbol
@@ -186,11 +184,11 @@ def write_reprocessed(
                         shortened += "\n"
                         hypo_file.write(hypos[i][j])
                         source_file.write(shortened)
-                        target_file.write(targets[i])
                     else:
                         hypo_file.write(hypos[i][j])
                         source_file.write(sources[i])
-                        target_file.write(targets[i])
+
+                    target_file.write(targets[i])
 
 
 def calc_length_from_frac(bpe_sentence, prefix_frac, bpe_symbol):
@@ -222,7 +220,7 @@ def get_prefix_no_bpe(sentence, bpe_symbol, prefix_len):
 
 def get_prefix_from_len(sentence, bpe_symbol, prefix_len):
     """get the prefix of sentence with bpe, with prefix len in terms of words, not bpe tokens"""
-    bpe_count = sum([bpe_symbol.strip(" ") in t for t in sentence[:prefix_len]])
+    bpe_count = sum(bpe_symbol.strip(" ") in t for t in sentence[:prefix_len])
     if bpe_count == 0:
         return sentence[:prefix_len]
     else:
@@ -241,8 +239,7 @@ def get_num_bpe_tokens_from_len(sentence, bpe_symbol, prefix_len):
 def make_right_to_left(line):
     tokens = line.split()
     tokens.reverse()
-    new_line = " ".join(tokens)
-    return new_line
+    return " ".join(tokens)
 
 
 def remove_bpe(line, bpe_symbol):
@@ -295,15 +292,9 @@ def get_score(
     bitext2_backwards=False,
     normalize=False,
 ):
-    if bitext1_backwards:
-        bitext1_norm = src_len
-    else:
-        bitext1_norm = tgt_len
+    bitext1_norm = src_len if bitext1_backwards else tgt_len
     if bitext_score2 is not None:
-        if bitext2_backwards:
-            bitext2_norm = src_len
-        else:
-            bitext2_norm = tgt_len
+        bitext2_norm = src_len if bitext2_backwards else tgt_len
     else:
         bitext2_norm = 1
         bitext_score2 = 0
@@ -335,11 +326,7 @@ class BitextOutput(object):
     ):
         """process output from rescoring"""
         source, hypo, score, target, pos_score = reprocess(output_file)
-        if backwards:
-            self.hypo_fracs = source_prefix_frac
-        else:
-            self.hypo_fracs = target_prefix_frac
-
+        self.hypo_fracs = source_prefix_frac if backwards else target_prefix_frac
         # remove length penalty so we can use raw scores
         score, num_bpe_tokens = get_score_from_pos(
             pos_score, prefix_len, hypo, bpe_symbol, self.hypo_fracs, backwards
@@ -368,9 +355,6 @@ class BitextOutput(object):
                 target[i] = remove_bpe(target[i], bpe_symbol)
                 hypo[i] = remove_bpe(hypo[i], bpe_symbol)
 
-                score[i] = float(score[i][0])
-                pos_score[i] = pos_score[i][0]
-
             else:
                 len_tgt = len(hypo[i][0].split())
                 # record length without <eos>
@@ -385,8 +369,6 @@ class BitextOutput(object):
                     source[i] = remove_bpe(make_right_to_left(source[i]), bpe_symbol)
                     target[i] = remove_bpe(make_right_to_left(target[i]), bpe_symbol)
                     hypo[i] = remove_bpe(make_right_to_left(hypo[i][0]), bpe_symbol)
-                    score[i] = float(score[i][0])
-                    pos_score[i] = pos_score[i][0]
                 else:
                     assert (
                         len(hypo[i]) == 1
@@ -394,8 +376,8 @@ class BitextOutput(object):
                     source[i] = remove_bpe(source[i], bpe_symbol)
                     target[i] = remove_bpe(target[i], bpe_symbol)
                     hypo[i] = remove_bpe(hypo[i][0], bpe_symbol)
-                    score[i] = float(score[i][0])
-                    pos_score[i] = pos_score[i][0]
+            score[i] = float(score[i][0])
+            pos_score[i] = pos_score[i][0]
 
         self.rescore_source = source
         self.rescore_hypo = hypo

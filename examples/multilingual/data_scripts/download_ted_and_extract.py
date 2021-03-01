@@ -63,13 +63,13 @@ class MultiLingualAlignedCorpusReader(object):
             for lang in list_:
                 self.lang_set.add(lang)
 
-        self.data = dict()
+        self.data = {}
         self.data['train'] = self.read_aligned_corpus(split_type='train')
         self.data['test'] = self.read_aligned_corpus(split_type='test')
         self.data['dev'] = self.read_aligned_corpus(split_type='dev')
 
     def read_data(self, file_loc_):
-        data_list = list()
+        data_list = []
         with io.open(file_loc_, 'r', encoding='utf8') as fp:
             for line in fp:
                 try:
@@ -80,10 +80,7 @@ class MultiLingualAlignedCorpusReader(object):
         return data_list
 
     def filter_text(self, dict_):
-        if self.target_token:
-            field_index = 1
-        else:
-            field_index = 0
+        field_index = 1 if self.target_token else 0
         data_dict = defaultdict(list)
         list1 = dict_['source']
         list2 = dict_['target']
@@ -116,11 +113,8 @@ class MultiLingualAlignedCorpusReader(object):
             de_tok(tok_file, lang)                
 
     def add_target_token(self, list_, lang_id):
-        new_list = list()
         token = '__' + lang_id + '__'
-        for sent in list_:
-            new_list.append(token + ' ' + sent)
-        return new_list
+        return [token + ' ' + sent for sent in list_]
 
     def read_from_single_file(self, path_, s_lang, t_lang):
         data_dict = defaultdict(list)
@@ -162,8 +156,7 @@ class MultiLingualAlignedCorpusReader(object):
                                                             t_lang=t_lang)
             data_dict['source'] += s_list
             data_dict['target'] += t_list
-        new_data_dict = self.filter_text(data_dict)
-        return new_data_dict
+        return self.filter_text(data_dict)
 
 
 def read_langs(corpus_path):
@@ -191,8 +184,7 @@ def extra_english(corpus_path, split):
 def tok_file_name(filename, lang):
     seps = filename.split('.')
     seps.insert(-1, 'tok')
-    tok_file = '.'.join(seps)
-    return tok_file
+    return '.'.join(seps)
 
 def de_tok(tok_file, lang):
     # seps = tok_file.split('.')
@@ -213,9 +205,7 @@ def extra_bitex(
 ):
     def get_ted_lang(lang):
         long_langs = ['pt-br', 'zh-cn', 'zh-tw', 'fr-ca']
-        if lang[:5] in long_langs:
-            return lang[:5]
-        elif lang[:4] =='calv':
+        if lang[:5] in long_langs or lang[:4] == 'calv':
             return lang[:5]
         elif lang in ['pt_BR', 'zh_CN', 'zh_TW', 'fr_CA']:
             return lang.lower().replace('_', '-')
@@ -257,11 +247,11 @@ def bar_custom(current, total, width=80):
 
 
 def download_and_extract(download_to, extract_to):
-    url = 'http://phontron.com/data/ted_talks.tar.gz'
     filename = f"{download_to}/ted_talks.tar.gz"
     if os.path.exists(filename):
         print(f'{filename} has already been downloaded so skip')
     else:
+        url = 'http://phontron.com/data/ted_talks.tar.gz'
         filename = wget.download(url, filename, bar=bar_custom)
     if os.path.exists(f'{extract_to}/all_talks_train.tsv'):
         print(f'Already extracted so skip')

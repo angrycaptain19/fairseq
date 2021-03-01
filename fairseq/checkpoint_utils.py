@@ -168,20 +168,19 @@ def load_checkpoint(cfg: CheckpointConfig, trainer, **passthrough_args):
         if cfg.finetune_from_model is not None and first_launch:
             # if there is no last checkpoint to restore, start the finetune from pretrained model
             # else just use usual logic to load checkpoint, e.g. restart from last checkpoint and etc.
-            if PathManager.exists(cfg.finetune_from_model):
-                checkpoint_path = cfg.finetune_from_model
-                reset_optimizer = True
-                reset_lr_scheduler = True
-                reset_meters = True
-                reset_dataloader = True
-                logger.info(
-                    f"loading pretrained model from {checkpoint_path}: "
-                    "optimizer, lr scheduler, meters, dataloader will be reset"
-                )
-            else:
+            if not PathManager.exists(cfg.finetune_from_model):
                 raise ValueError(
                     f"--funetune-from-model {cfg.finetune_from_model} does not exist"
                 )
+            checkpoint_path = cfg.finetune_from_model
+            reset_optimizer = True
+            reset_lr_scheduler = True
+            reset_meters = True
+            reset_dataloader = True
+            logger.info(
+                f"loading pretrained model from {checkpoint_path}: "
+                "optimizer, lr scheduler, meters, dataloader will be reset"
+            )
     elif cfg.model_parallel_size > 1:
         checkpoint_path = cfg.restore_file.replace(".pt", suffix + ".pt")
     else:
@@ -209,18 +208,18 @@ def load_checkpoint(cfg: CheckpointConfig, trainer, **passthrough_args):
     ):
         save_checkpoint.best = extra_state["best"]
 
-    if extra_state is not None and not reset_dataloader:
+    if extra_state is None or reset_dataloader:
+        epoch_itr = trainer.get_train_iterator(
+            epoch=1, load_dataset=True, **passthrough_args
+        )
+
+    else:
         # restore iterator from checkpoint
         itr_state = extra_state["train_iterator"]
         epoch_itr = trainer.get_train_iterator(
             epoch=itr_state["epoch"], load_dataset=True, **passthrough_args
         )
         epoch_itr.load_state_dict(itr_state)
-    else:
-        epoch_itr = trainer.get_train_iterator(
-            epoch=1, load_dataset=True, **passthrough_args
-        )
-
     trainer.lr_step(epoch_itr.epoch)
 
     return extra_state, epoch_itr
@@ -603,10 +602,7 @@ def prune_state_dict(state_dict, model_cfg: Optional[DictConfig]):
         keep_layers = sorted(
             int(layer_string) for layer_string in layers_to_keep.split(",")
         )
-        mapping_dict = {}
-        for i in range(len(keep_layers)):
-            mapping_dict[str(keep_layers[i])] = str(i)
-
+        mapping_dict = {str(keep_layers[i]): str(i) for i in range(len(keep_layers))}
         regex = re.compile(r"^{layer}.*\.layers\.(\d+)".format(layer=layer_name))
         return {"substitution_regex": regex, "mapping_dict": mapping_dict}
 

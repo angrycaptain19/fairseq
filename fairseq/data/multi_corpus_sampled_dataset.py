@@ -102,7 +102,7 @@ class MultiCorpusSampledDataset(FairseqDataset):
             1. Select a dataset using the specified probability distribution.
             2. Call the collater function of the selected dataset.
         """
-        if len(samples) == 0:
+        if not samples:
             return None
 
         selected_key = self.sampling_func(list(self.datasets.keys()))

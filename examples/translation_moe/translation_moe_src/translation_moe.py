@@ -106,34 +106,33 @@ class TranslationMoETask(TranslationTask):
 
         model = models.build_model(cfg, self)
         if not self.uniform_prior and not hasattr(model, "gating_network"):
-            if self.cfg.mean_pool_gating_network:
-                if self.cfg.mean_pool_gating_network_encoder_dim > 0:
-                    encoder_dim = self.cfg.mean_pool_gating_network_encoder_dim
-                elif getattr(cfg, "encoder_embed_dim", None):
-                    # assume that encoder_embed_dim is the encoder's output dimension
-                    encoder_dim = cfg.encoder_embed_dim
-                else:
-                    raise ValueError(
-                        "Must specify --mean-pool-gating-network-encoder-dim"
-                    )
-
-                if self.cfg.mean_pool_gating_network_dropout > 0:
-                    dropout = self.cfg.mean_pool_gating_network_dropout
-                elif getattr(cfg, "dropout", None):
-                    dropout = cfg.dropout
-                else:
-                    raise ValueError("Must specify task.mean_pool_gating_network_dropout")
-
-                model.gating_network = MeanPoolGatingNetwork(
-                    encoder_dim,
-                    self.cfg.num_experts,
-                    dropout,
-                )
-            else:
+            if not self.cfg.mean_pool_gating_network:
                 raise ValueError(
                     "translation_moe task with learned prior requires the model to "
                     "have a gating network; try using --mean-pool-gating-network"
                 )
+            if self.cfg.mean_pool_gating_network_encoder_dim > 0:
+                encoder_dim = self.cfg.mean_pool_gating_network_encoder_dim
+            elif getattr(cfg, "encoder_embed_dim", None):
+                # assume that encoder_embed_dim is the encoder's output dimension
+                encoder_dim = cfg.encoder_embed_dim
+            else:
+                raise ValueError(
+                    "Must specify --mean-pool-gating-network-encoder-dim"
+                )
+
+            if self.cfg.mean_pool_gating_network_dropout > 0:
+                dropout = self.cfg.mean_pool_gating_network_dropout
+            elif getattr(cfg, "dropout", None):
+                dropout = cfg.dropout
+            else:
+                raise ValueError("Must specify task.mean_pool_gating_network_dropout")
+
+            model.gating_network = MeanPoolGatingNetwork(
+                encoder_dim,
+                self.cfg.num_experts,
+                dropout,
+            )
         return model
 
     def expert_index(self, i):
@@ -178,14 +177,11 @@ class TranslationMoETask(TranslationTask):
                 lprob_y = get_lprob_y(encoder_out, prev_output_tokens_k)  # -> B
 
             if self.uniform_prior:
-                lprob_yz = lprob_y
-            else:
-                lprob_z = model.gating_network(encoder_out)  # B x K
-                if winners is not None:
-                    lprob_z = lprob_z.gather(dim=1, index=winners.unsqueeze(-1))
-                lprob_yz = lprob_y + lprob_z.type_as(lprob_y)  # B x K
-
-            return lprob_yz
+                return lprob_y
+            lprob_z = model.gating_network(encoder_out)  # B x K
+            if winners is not None:
+                lprob_z = lprob_z.gather(dim=1, index=winners.unsqueeze(-1))
+            return lprob_y + lprob_z.type_as(lprob_y)
 
         # compute responsibilities without dropout
         with utils.model_eval(model):  # disable dropout

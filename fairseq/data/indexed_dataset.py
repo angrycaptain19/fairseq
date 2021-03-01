@@ -22,12 +22,14 @@ def best_fitting_int_dtype(
     max_int_to_represent,
 ) -> Union[np.uint16, np.uint32, np.int64]:
 
-    if max_int_to_represent is None:
+    if (
+        max_int_to_represent is None
+        or max_int_to_represent >= 65500
+        and max_int_to_represent < 4294967295
+    ):
         return np.uint32  # Safe guess
     elif max_int_to_represent < 65500:
         return np.uint16
-    elif max_int_to_represent < 4294967295:
-        return np.uint32
     else:
         return np.int64
         # we avoid np.uint64 because it doesn't save space and its type promotion behaves unexpectedly
@@ -221,9 +223,10 @@ class IndexedCachedDataset(IndexedDataset):
         if not self.data_file:
             self.read_data(self.path)
         indices = sorted(set(indices))
-        total_size = 0
-        for i in indices:
-            total_size += self.data_offsets[i + 1] - self.data_offsets[i]
+        total_size = sum(
+            self.data_offsets[i + 1] - self.data_offsets[i] for i in indices
+        )
+
         self.cache = np.empty(total_size, dtype=self.dtype)
         ptx = 0
         self.cache_index.clear()
@@ -358,17 +361,16 @@ class IndexedDatasetBuilder:
 
     def finalize(self, index_file):
         self.out_file.close()
-        index = open(index_file, "wb")
-        index.write(b"TNTIDX\x00\x00")
-        index.write(struct.pack("<Q", 1))
-        index.write(
-            struct.pack("<QQ", _dtype_header_code(self.dtype), self.element_size)
-        )
-        index.write(struct.pack("<QQ", len(self.data_offsets) - 1, len(self.sizes)))
-        write_longs(index, self.dim_offsets)
-        write_longs(index, self.data_offsets)
-        write_longs(index, self.sizes)
-        index.close()
+        with open(index_file, "wb") as index:
+            index.write(b"TNTIDX\x00\x00")
+            index.write(struct.pack("<Q", 1))
+            index.write(
+                struct.pack("<QQ", _dtype_header_code(self.dtype), self.element_size)
+            )
+            index.write(struct.pack("<QQ", len(self.data_offsets) - 1, len(self.sizes)))
+            write_longs(index, self.dim_offsets)
+            write_longs(index, self.data_offsets)
+            write_longs(index, self.sizes)
 
 
 def _warmup_mmap_file(path):

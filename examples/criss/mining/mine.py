@@ -190,31 +190,30 @@ if __name__ == "__main__":
         encoding="utf-8",
         errors="surrogateescape",
     )
-    tgt_out = open(
+    with open(
         f"{directory}/all.{args.tgt_lang}",
         mode="w",
         encoding="utf-8",
         errors="surrogateescape",
-    )
-    scores_out = open(
-        f"{directory}/all.scores", mode="w", encoding="utf-8", errors="surrogateescape"
-    )
-    count = 0
-    for i in np.argsort(-scores):
-        src_ind, trg_ind = indices[i]
-        if src_ind not in seen_src and trg_ind not in seen_trg:
-            seen_src.add(src_ind)
-            seen_trg.add(trg_ind)
-            if scores[i] > threshold or count < min_count:
-                if x_sentences[src_ind]:
-                    print(scores[i], file=scores_out)
-                    print(x_sentences[src_ind], file=src_out)
-                    print(y_sentences[trg_ind], file=tgt_out)
-                    count += 1
-                else:
-                    print(f"Ignoring sentence: {x_sentences[src_ind]}")
-    src_out.close()
-    tgt_out.close()
+    ) as tgt_out:
+        scores_out = open(
+            f"{directory}/all.scores", mode="w", encoding="utf-8", errors="surrogateescape"
+        )
+        count = 0
+        for i in np.argsort(-scores):
+            src_ind, trg_ind = indices[i]
+            if src_ind not in seen_src and trg_ind not in seen_trg:
+                seen_src.add(src_ind)
+                seen_trg.add(trg_ind)
+                if scores[i] > threshold or count < min_count:
+                    if x_sentences[src_ind]:
+                        print(scores[i], file=scores_out)
+                        print(x_sentences[src_ind], file=src_out)
+                        print(y_sentences[trg_ind], file=tgt_out)
+                        count += 1
+                    else:
+                        print(f"Ignoring sentence: {x_sentences[src_ind]}")
+        src_out.close()
     scores_out.close()
 
     print(f"Found {count} pairs for threshold={threshold}")

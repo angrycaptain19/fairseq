@@ -37,8 +37,9 @@ class LatencyScorer:
         self.scores = {}
         for metric in LATENCY_METRICS:
             self.scores[metric] = sum(
-                [x[metric][0, 0].item() for x in self.recorder]
+                x[metric][0, 0].item() for x in self.recorder
             ) / len(self.recorder)
+
         return self.scores
 
     @classmethod
@@ -72,7 +73,7 @@ if __name__ == "__main__":
     average_results = {}
 
     for metric in LATENCY_METRICS:
-        average_results[metric] = sum([x[metric][0, 0].item() for x in recorder]) / len(
+        average_results[metric] = (sum(x[metric][0, 0].item() for x in recorder) / len(
             recorder
-        )
+        ))
         print(f"{metric}: {average_results[metric]}")

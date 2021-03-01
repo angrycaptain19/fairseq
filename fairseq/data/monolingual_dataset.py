@@ -15,17 +15,12 @@ def collate(samples, pad_idx, eos_idx):
 
     def merge(key, is_list=False):
         if is_list:
-            res = []
-            for i in range(len(samples[0][key])):
-                res.append(
-                    data_utils.collate_tokens(
+            return [data_utils.collate_tokens(
                         [s[key][i] for s in samples],
                         pad_idx,
                         eos_idx,
                         left_pad=False,
-                    )
-                )
-            return res
+                    ) for i in range(len(samples[0][key]))]
         else:
             return data_utils.collate_tokens(
                 [s[key] for s in samples],

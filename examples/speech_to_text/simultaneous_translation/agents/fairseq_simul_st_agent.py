@@ -206,14 +206,13 @@ class FairseqSimulSTAgent(SpeechAgent):
             self.model.cuda()
 
         # Set dictionary
-        self.dict = {}
-        self.dict["tgt"] = task.target_dictionary
+        self.dict = {"tgt": task.target_dictionary}
 
     def initialize_states(self, states):
         self.feature_extractor.clear_cache()
         states.units.source = TensorListEntry()
         states.units.target = ListEntry()
-        states.incremental_states = dict()
+        states.incremental_states = {}
 
     def segment_to_units(self, segment, states):
         # Convert speech samples to features
@@ -236,22 +235,22 @@ class FairseqSimulSTAgent(SpeechAgent):
             if index is None:
                 units.pop()
             token = self.model.decoder.dictionary.string([index])
-            if token.startswith(BOW_PREFIX):
-                if len(segment) == 0:
-                    segment += [token.replace(BOW_PREFIX, "")]
-                else:
-                    for j in range(len(segment)):
-                        units.pop()
-
-                    string_to_return = ["".join(segment)]
-
-                    if self.model.decoder.dictionary.eos() == units[0]:
-                        string_to_return += [DEFAULT_EOS]
-
-                    return string_to_return
-            else:
+            if (
+                token.startswith(BOW_PREFIX)
+                and not segment
+                or not token.startswith(BOW_PREFIX)
+            ):
                 segment += [token.replace(BOW_PREFIX, "")]
+            else:
+                for _ in segment:
+                    units.pop()
 
+                string_to_return = ["".join(segment)]
+
+                if self.model.decoder.dictionary.eos() == units[0]:
+                    string_to_return += [DEFAULT_EOS]
+
+                return string_to_return
         if (
             len(units) > 0
             and self.model.decoder.dictionary.eos() == units[-1]

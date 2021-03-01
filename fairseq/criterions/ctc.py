@@ -173,11 +173,7 @@ class CtcCriterion(FairseqCriterion):
                             decoded = None
                         else:
                             decoded = decoded[0]
-                            if len(decoded) < 1:
-                                decoded = None
-                            else:
-                                decoded = decoded[0]
-
+                            decoded = None if len(decoded) < 1 else decoded[0]
                     p = (t != self.task.target_dictionary.pad()) & (
                         t != self.task.target_dictionary.eos()
                     )

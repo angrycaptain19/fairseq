@@ -22,10 +22,10 @@ def main():
     parser.add_argument("files", nargs="*", help="input files")
     args = parser.parse_args()
 
-    seen = set()
     with fileinput.input(args.files, mode="rb") as h:
         pool = Pool(args.workers)
         results = pool.imap_unordered(get_hashes_and_lines, h, 1000)
+        seen = set()
         for i, (hash, raw_line) in enumerate(results):
             if hash not in seen:
                 seen.add(hash)

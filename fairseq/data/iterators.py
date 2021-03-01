@@ -42,15 +42,8 @@ class CountingIterator(object):
         self.iterable = iterable
         self.itr = iter(self)
 
-        if start is None:
-            self.n = getattr(iterable, "n", 0)
-        else:
-            self.n = start
-
-        if total is None:
-            self.total = self.n + len(iterable)
-        else:
-            self.total = total
+        self.n = getattr(iterable, "n", 0) if start is None else start
+        self.total = self.n + len(iterable) if total is None else total
 
     def __len__(self):
         return self.total
@@ -530,7 +523,7 @@ def _chunk_iterator(itr, chunk_size):
         if len(chunk) == chunk_size:
             yield chunk
             chunk = []
-    if len(chunk) > 0:
+    if chunk:
         yield chunk
 
 
@@ -631,18 +624,22 @@ class BufferedIterator(object):
             self._create_consumer()
 
         # Notify the user if there is a data loading bottleneck
-        if self._queue.qsize() < min(2, max(1, self._queue.maxsize // 2)):
-            if time.time() - self.start_time > 5 * 60:
-                if (
+        if (
+            self._queue.qsize() < min(2, max(1, self._queue.maxsize // 2))
+            and time.time() - self.start_time > 5 * 60
+            and (
+                (
                     self.warning_time is None
                     or time.time() - self.warning_time > 15 * 60
-                ):
-                    logger.debug(
-                        "Data loading buffer is empty or nearly empty. This may "
-                        "indicate a data loading bottleneck, and increasing the "
-                        "number of workers (--num-workers) may help."
-                    )
-                    self.warning_time = time.time()
+                )
+            )
+        ):
+            logger.debug(
+                "Data loading buffer is empty or nearly empty. This may "
+                "indicate a data loading bottleneck, and increasing the "
+                "number of workers (--num-workers) may help."
+            )
+            self.warning_time = time.time()
 
         # Get next example
         item = self._queue.get(True)

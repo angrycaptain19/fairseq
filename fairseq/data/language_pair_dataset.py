@@ -387,14 +387,14 @@ class LanguagePairDataset(FairseqDataset):
         if self.src_lang_id is not None or self.tgt_lang_id is not None:
             src_tokens = res["net_input"]["src_tokens"]
             bsz = src_tokens.size(0)
-            if self.src_lang_id is not None:
-                res["net_input"]["src_lang_id"] = (
-                    torch.LongTensor([[self.src_lang_id]]).expand(bsz, 1).to(src_tokens)
-                )
-            if self.tgt_lang_id is not None:
-                res["tgt_lang_id"] = (
-                    torch.LongTensor([[self.tgt_lang_id]]).expand(bsz, 1).to(src_tokens)
-                )
+        if self.src_lang_id is not None:
+            res["net_input"]["src_lang_id"] = (
+                torch.LongTensor([[self.src_lang_id]]).expand(bsz, 1).to(src_tokens)
+            )
+        if self.tgt_lang_id is not None:
+            res["tgt_lang_id"] = (
+                torch.LongTensor([[self.tgt_lang_id]]).expand(bsz, 1).to(src_tokens)
+            )
         return res
 
     def num_tokens(self, index):
@@ -428,17 +428,17 @@ class LanguagePairDataset(FairseqDataset):
             indices = np.random.permutation(len(self)).astype(np.int64)
         else:
             indices = np.arange(len(self), dtype=np.int64)
-        if self.buckets is None:
-            # sort by target length, then source length
-            if self.tgt_sizes is not None:
-                indices = indices[np.argsort(self.tgt_sizes[indices], kind="mergesort")]
-            return indices[np.argsort(self.src_sizes[indices], kind="mergesort")]
-        else:
+        if self.buckets is not None:
             # sort by bucketed_num_tokens, which is:
             #   max(padded_src_len, padded_tgt_len)
             return indices[
                 np.argsort(self.bucketed_num_tokens[indices], kind="mergesort")
             ]
+
+        # sort by target length, then source length
+        if self.tgt_sizes is not None:
+            indices = indices[np.argsort(self.tgt_sizes[indices], kind="mergesort")]
+        return indices[np.argsort(self.src_sizes[indices], kind="mergesort")]
 
     @property
     def supports_prefetch(self):

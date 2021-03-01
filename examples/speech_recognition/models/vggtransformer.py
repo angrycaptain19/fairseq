@@ -860,19 +860,17 @@ class VGGTransformerEncoderOnly(VGGTransformerEncoder):
 
 
 def Embedding(num_embeddings, embedding_dim, padding_idx):
-    m = nn.Embedding(num_embeddings, embedding_dim, padding_idx=padding_idx)
     # nn.init.uniform_(m.weight, -0.1, 0.1)
     # nn.init.constant_(m.weight[padding_idx], 0)
-    return m
+    return nn.Embedding(num_embeddings, embedding_dim, padding_idx=padding_idx)
 
 
 def Linear(in_features, out_features, bias=True, dropout=0):
     """Linear layer (input: N x T x C)"""
-    m = nn.Linear(in_features, out_features, bias=bias)
     # m.weight.data.uniform_(-0.1, 0.1)
     # if bias:
     #     m.bias.data.uniform_(-0.1, 0.1)
-    return m
+    return nn.Linear(in_features, out_features, bias=bias)
 
 
 def LinearizedConv1d(in_channels, out_channels, kernel_size, dropout=0, **kwargs):
@@ -885,8 +883,7 @@ def LinearizedConv1d(in_channels, out_channels, kernel_size, dropout=0, **kwargs
 
 
 def LayerNorm(embedding_dim):
-    m = nn.LayerNorm(embedding_dim)
-    return m
+    return nn.LayerNorm(embedding_dim)
 
 
 # seq2seq models

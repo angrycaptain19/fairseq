@@ -85,7 +85,7 @@ def main():
     for line in args.labels:
         (utt_id, label) = line.split(" ", 1)
         labels[utt_id] = label
-    if len(labels) == 0:
+    if not labels:
         raise Exception("No labels found in ", args.labels_path)
 
     Sample = namedtuple("Sample", "aud_path utt_id")

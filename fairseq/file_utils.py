@@ -282,10 +282,7 @@ def get_from_cache(url, cache_dir=None):
             response = request_wrap_timeout(
                 partial(requests.head, url, allow_redirects=True), url
             )
-            if response.status_code != 200:
-                etag = None
-            else:
-                etag = response.headers.get("ETag")
+            etag = None if response.status_code != 200 else response.headers.get("ETag")
         except RuntimeError:
             etag = None
 

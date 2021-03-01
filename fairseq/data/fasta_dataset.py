@@ -76,11 +76,7 @@ class FastaDataset(torch.utils.data.Dataset):
         self.threadlocal = threading.local()
 
     def __getstate__(self):
-        d = {}
-        for i, v in self.__dict__.items():
-            if i != "threadlocal":
-                d[i] = v
-        return d
+        return {i: v for i, v in self.__dict__.items() if i != "threadlocal"}
 
     def __del__(self):
         if hasattr(self.threadlocal, "f"):

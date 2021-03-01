@@ -204,10 +204,9 @@ class DatasetWriter:
     def load_data(self, fnames):
 
         dataset = FilesDataset(fnames, self.args.labels)
-        loader = DataLoader(
+        return DataLoader(
             dataset, batch_size=32, collate_fn=dataset.collate, num_workers=8
         )
-        return loader
 
     def load_model(self):
         model, cfg, task = fairseq.checkpoint_utils.load_model_ensemble_and_task([self.checkpoint])

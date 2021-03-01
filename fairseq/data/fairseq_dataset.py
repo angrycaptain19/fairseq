@@ -168,7 +168,7 @@ class FairseqDataset(torch.utils.data.Dataset, EpochListening):
             np.array: filtered sample array
             list: list of removed indices
         """
-        if isinstance(max_sizes, float) or isinstance(max_sizes, int):
+        if isinstance(max_sizes, (float, int)):
             if hasattr(self, "sizes") and isinstance(self.sizes, np.ndarray):
                 ignored = indices[self.sizes[indices] > max_sizes].tolist()
                 indices = indices[self.sizes[indices] <= max_sizes]

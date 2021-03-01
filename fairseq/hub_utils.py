@@ -255,7 +255,7 @@ class GeneratorHubInterface(nn.Module):
         self, tokens: List[List[int]], skip_invalid_size_inputs: bool
     ) -> Iterator[Dict[str, Any]]:
         lengths = torch.LongTensor([t.numel() for t in tokens])
-        batch_iterator = self.task.get_batch_iterator(
+        return self.task.get_batch_iterator(
             dataset=self.task.build_dataset_for_inference(tokens, lengths),
             max_tokens=self.cfg.dataset.max_tokens,
             max_sentences=self.cfg.dataset.batch_size,
@@ -263,7 +263,6 @@ class GeneratorHubInterface(nn.Module):
             ignore_invalid_inputs=skip_invalid_size_inputs,
             disable_iterator_cache=True,
         ).next_epoch_itr(shuffle=False)
-        return batch_iterator
 
 
 class BPEHubInterface(object):

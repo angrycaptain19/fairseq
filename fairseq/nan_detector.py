@@ -41,7 +41,7 @@ class NanDetector:
                 norm[name] = grad_norm.item()
                 if torch.isnan(grad_norm).any() or torch.isinf(grad_norm).any():
                     gradients[name] = param.grad.data
-        if len(gradients) > 0:
+        if gradients:
             logger.info("Detected nan/inf grad norm, dumping norms...")
             logger.info(f"norms: {norm}")
             logger.info(f"gradients: {gradients}")
@@ -91,7 +91,7 @@ class NanDetector:
         elif isinstance(x, dict):
             for v in x.values():
                 self._apply(module, inp, v, backward)
-        elif isinstance(x, list) or isinstance(x, tuple):
+        elif isinstance(x, (list, tuple)):
             for v in x:
                 self._apply(module, inp, v, backward)
 

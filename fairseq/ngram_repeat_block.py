@@ -105,7 +105,7 @@ class NGramRepeatBlock(nn.Module):
             for ngram in self.transpose_list(
                 [gen_tokens[i:] for i in range(self.no_repeat_ngram_size)]
             ):
-                key = ",".join([str(x) for x in ngram[:-1]])
+                key = ",".join(str(x) for x in ngram[:-1])
                 gen_ngrams[bbsz_idx][key] = gen_ngrams[bbsz_idx].get(
                     key, torch.jit.annotate(List[int], [])
                 ) + [ngram[-1]]
@@ -139,7 +139,7 @@ class NGramRepeatBlock(nn.Module):
             bbsz_idx, step + 2 - no_repeat_ngram_size : step + 1
         ].tolist()
         # before decoding the next token, prevent decoding of ngrams that have already appeared
-        ngram_index = ",".join([str(x) for x in tokens_list])
+        ngram_index = ",".join(str(x) for x in tokens_list)
         return gen_ngrams[bbsz_idx].get(ngram_index, torch.jit.annotate(List[int], []))
 
     @staticmethod

@@ -189,9 +189,7 @@ class SimulTransAgent(Agent):
         pass
 
     def finish_eval(self, states, new_state):
-        if len(new_state) == 0 and len(states["indices"]["src"]) == 0:
-            return True
-        return False
+        return len(new_state) == 0 and len(states["indices"]["src"]) == 0
 
     def _append_indices(self, states, new_indices, key):
         states["indices"][key] += new_indices

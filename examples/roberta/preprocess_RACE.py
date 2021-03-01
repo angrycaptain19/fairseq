@@ -84,18 +84,16 @@ def main():
         qa_files = [open(qa_file_path, "w") for qa_file_path in qa_file_paths]
         outf_context_path = os.path.join(args.output_dir, set_type + ".input0")
         outf_label_path = os.path.join(args.output_dir, set_type + ".label")
-        outf_context = open(outf_context_path, "w")
-        outf_label = open(outf_label_path, "w")
-        for example in examples:
-            outf_context.write(example.paragraph + "\n")
-            for i in range(4):
-                qa_files[i].write(example.qa_list[i] + "\n")
-            outf_label.write(str(example.label) + "\n")
+        with open(outf_context_path, "w") as outf_context:
+            with open(outf_label_path, "w") as outf_label:
+                for example in examples:
+                    outf_context.write(example.paragraph + "\n")
+                    for i in range(4):
+                        qa_files[i].write(example.qa_list[i] + "\n")
+                    outf_label.write(str(example.label) + "\n")
 
-        for f in qa_files:
-            f.close()
-        outf_label.close()
-        outf_context.close()
+                for f in qa_files:
+                    f.close()
 
 
 if __name__ == "__main__":

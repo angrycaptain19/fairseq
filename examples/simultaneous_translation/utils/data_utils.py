@@ -24,8 +24,7 @@ def apply_mv_norm(features):
     if features.size(0) < 2:
         return features
     mean, invstddev = calc_mean_invstddev(features)
-    res = (features - mean) * invstddev
-    return res
+    return (features - mean) * invstddev
 
 
 def lengths_to_encoder_padding_mask(lengths, batch_first=False):

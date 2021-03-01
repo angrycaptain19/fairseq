@@ -30,8 +30,8 @@ class MultiprocessingPdb(pdb.Pdb):
         pdb.Pdb.__init__(self, nosigint=True)
 
     def _cmdloop(self):
-        stdin_bak = sys.stdin
         with _stdin_lock:
+            stdin_bak = sys.stdin
             try:
                 if _stdin_fd is not None:
                     if not _stdin[0]:

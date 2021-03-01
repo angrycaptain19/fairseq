@@ -57,7 +57,7 @@ class BPEWordSplitter(object):
             return bow_indices[-1]
 
     def merge(self, list_of_string):
-        return " ".join([item.replace("@@", "") for item in list_of_string])
+        return " ".join(item.replace("@@", "") for item in list_of_string)
 
 
 class SentencePieceModelWordSplitter(object):

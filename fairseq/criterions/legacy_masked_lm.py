@@ -21,13 +21,12 @@ def compute_cross_entropy_loss(logits, targets, ignore_index=-100):
         -1
     ), "Logits and Targets tensor shapes don't match up"
 
-    loss = F.nll_loss(
+    return F.nll_loss(
         F.log_softmax(logits, -1, dtype=torch.float32),
         targets,
         reduction="sum",
         ignore_index=ignore_index,
     )
-    return loss
 
 
 @register_criterion("legacy_masked_lm_loss")

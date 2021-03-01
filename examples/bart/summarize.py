@@ -13,13 +13,13 @@ CNN_KWARGS = dict(beam=4, lenpen=2.0, max_len_b=140, min_len=55, no_repeat_ngram
 
 @torch.no_grad()
 def generate(bart, infile, outfile="bart_hypo.txt", bsz=32, n_obs=None, **eval_kwargs):
-    count = 1
-
     # if n_obs is not None: bsz = min(bsz, n_obs)
 
     with open(infile) as source, open(outfile, "w") as fout:
         sline = source.readline().strip()
         slines = [sline]
+        count = 1
+
         for sline in source:
             if n_obs is not None and count > n_obs:
                 break

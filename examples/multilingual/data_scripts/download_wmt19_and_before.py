@@ -77,13 +77,13 @@ def download_parts_and_combine(dl_folder, urls, filename):
     return filename
 
 def download_a_url(dl_folder, url):
-    url, filename = get_downloaded_file(dl_folder, url)        
+    url, filename = get_downloaded_file(dl_folder, url)
     if os.path.exists(filename):
         print(f'{filename} has already been downloaded so skip')
         return filename
 
     print(f'downloading {url} to {filename}')
-    if isinstance(url, list) or isinstance(url, tuple):
+    if isinstance(url, (list, tuple)):
         download_parts_and_combine(dl_folder, url, filename)
     else:
         wget.download(url, filename, bar=bar_custom)
@@ -174,8 +174,7 @@ def extract_all_files(
 
 def my_glob(folder):
     for p in [f'{folder}/*', f'{folder}/*/*', f'{folder}/*/*/*']:
-        for f in glob.glob(p):
-            yield f
+        yield from glob.glob(p)
 
 
 def sgm2raw(sgm, debug):
@@ -342,7 +341,7 @@ def concat_files(split, src, tgt, extracted_folders, split_urls, path_patterns, 
                     extracted_folders[str(url)], path_patterns, 
                     s_src, s_tgt, s_lang)):
                 files.append(extracted_file)
-        if len(files) == 0:
+        if not files:
             print('warning: ', f'No files found for split {to_file}')
             continue
         files = sorted(set(files))
@@ -494,14 +493,14 @@ def download_czang16(download_to, username=None):
     print('done with downloading czeng1.6')
 
 def download_czeng17_script(download_to, extract_folder, debug=False):
-    url = 'http://ufal.mff.cuni.cz/czeng/download.php?f=convert_czeng16_to_17.pl.zip'
     filename = f'{download_to}/convert_czeng16_to_17.pl.zip'
     extract_to = f'{extract_folder}/{get_extract_name(filename)}'
     script_path = f'{extract_to}/convert_czeng16_to_17.pl'
-    
+
     if not os.path.exists(script_path):
-        wget.download(url, filename, bar=bar_custom)  
-        extract_to = extract_file(f'{download_to}/convert_czeng16_to_17.pl.zip', extract_folder, get_extract_name=get_extract_name, debug=debug)    
+        url = 'http://ufal.mff.cuni.cz/czeng/download.php?f=convert_czeng16_to_17.pl.zip'
+        wget.download(url, filename, bar=bar_custom)
+        extract_to = extract_file(f'{download_to}/convert_czeng16_to_17.pl.zip', extract_folder, get_extract_name=get_extract_name, debug=debug)
     return script_path
 
 czeng17_script_path = ""
@@ -519,14 +518,14 @@ def convert2czeng17(file, debug):
     return file
 
 def extract_czeng17(extract_folder, debug=False):
-    url = 'http://ufal.mff.cuni.cz/czeng/download.php?f=convert_czeng16_to_17.pl.zip'
     filename = f'{download_to}/convert_czeng16_to_17.pl.zip'
     extract_to = f'{extract_folder}/{get_extract_name(filename)}'
     script_path = f'{extract_to}/convert_czeng16_to_17.pl'
-    
+
     if not os.path.exists(script_path):
-        wget.download(url, filename, bar=bar_custom)  
-        extract_to = extract_file(f'{download_to}/convert_czeng16_to_17.pl.zip', extract_folder, get_extract_name=get_extract_name, debug=debug)    
+        url = 'http://ufal.mff.cuni.cz/czeng/download.php?f=convert_czeng16_to_17.pl.zip'
+        wget.download(url, filename, bar=bar_custom)
+        extract_to = extract_file(f'{download_to}/convert_czeng16_to_17.pl.zip', extract_folder, get_extract_name=get_extract_name, debug=debug)
     return script_path
 
 #########

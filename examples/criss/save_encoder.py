@@ -35,8 +35,7 @@ def get_avg_pool(
         encoder_mask = encoder_mask[1:, :, :]
         np_encoder_outs = np_encoder_outs[1, :, :]
     masked_encoder_outs = encoder_mask * np_encoder_outs
-    avg_pool = (masked_encoder_outs / encoder_mask.sum(axis=0)).sum(axis=0)
-    return avg_pool
+    return (masked_encoder_outs / encoder_mask.sum(axis=0)).sum(axis=0)
 
 
 def main(args):
@@ -104,7 +103,6 @@ def main(args):
         num_workers=args.num_workers,
     ).next_epoch_itr(shuffle=False)
 
-    num_sentences = 0
     source_sentences = []
     shard_id = 0
     all_avg_pool = None
@@ -115,6 +113,7 @@ def main(args):
         and not task.args.lang_tok_replacing_bos_eos
     )
     with progress_bar.build_progress_bar(args, itr) as t:
+        num_sentences = 0
         for sample in t:
             if sample is None:
                 print("Skipping None")
@@ -136,11 +135,11 @@ def main(args):
                     args.post_process,
                     has_langtok=encoder_has_langtok,
                 )
-                if all_avg_pool is not None:
-                    all_avg_pool = np.concatenate((all_avg_pool, avg_pool))
-                else:
+                if all_avg_pool is None:
                     all_avg_pool = avg_pool
 
+                else:
+                    all_avg_pool = np.concatenate((all_avg_pool, avg_pool))
             if not isinstance(sample["id"], list):
                 sample_ids = sample["id"].tolist()
             else:
@@ -152,19 +151,18 @@ def main(args):
                 )
 
                 # Either retrieve the original sentences or regenerate them from tokens.
-                if align_dict is not None:
+                if align_dict is None:
+                    if src_dict is None:
+                        src_str = ""
+
+                    else:
+                        src_str = src_dict.string(src_tokens, args.post_process)
+                else:
                     src_str = task.dataset(args.gen_subset).src.get_original_text(
                         sample_id
                     )
-                else:
-                    if src_dict is not None:
-                        src_str = src_dict.string(src_tokens, args.post_process)
-                    else:
-                        src_str = ""
-
-                if not args.quiet:
-                    if src_dict is not None:
-                        print("S-{}\t{}".format(sample_id, src_str))
+                if not args.quiet and src_dict is not None:
+                    print("S-{}\t{}".format(sample_id, src_str))
 
                 source_sentences.append(f"{sample_id}\t{src_str}")
 

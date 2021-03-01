@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 """isort:skip_file"""
 
+
 import functools
 import importlib
 
@@ -31,7 +32,7 @@ for dep in dependencies:
         if dep == "hydra":
             dep = "hydra-core"
         missing_deps.append(dep)
-if len(missing_deps) > 0:
+if missing_deps:
     raise RuntimeError("Missing dependencies: {}".format(", ".join(missing_deps)))
 
 

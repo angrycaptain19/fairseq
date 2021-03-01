@@ -253,12 +253,7 @@ class InferenceProcessor:
         sid: int,
         batch_id: int,
     ) -> Tuple[int, int]:
-        speaker = None  # Speaker can't be parsed from dataset.
-
-        if "target_label" in sample:
-            toks = sample["target_label"]
-        else:
-            toks = sample["target"]
+        toks = sample.get("target_label", sample["target"])
         toks = toks[batch_id, :]
 
         # Processes hypothesis.
@@ -276,6 +271,8 @@ class InferenceProcessor:
                                  self.cfg.common_eval.post_process)
 
         if self.cfg.decoding.write_sentences:
+            speaker = None  # Speaker can't be parsed from dataset.
+
             print(f"{hyp_pieces} ({speaker}-{sid})", file=self.hypo_units_file)
             print(f"{hyp_words} ({speaker}-{sid})", file=self.hypo_words_file)
             print(f"{tgt_pieces} ({speaker}-{sid})", file=self.ref_units_file)

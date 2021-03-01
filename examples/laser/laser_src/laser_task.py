@@ -108,8 +108,7 @@ class LaserTask(LegacyFairseqTask):
 
     # Experimental overriding for backtranslation
     def build_model(self, args):
-        model = models.build_model(args, self)
-        return model
+        return models.build_model(args, self)
 
     def dataset(self, split):
         if split not in self.datasets:
@@ -122,9 +121,7 @@ class LaserTask(LegacyFairseqTask):
         def indexed_dataset(path, dictionary):
             if self.args.raw_text:
                 raise Exception("Unable to handle raw text.")
-            dataset = IndexedDataset(path, fix_lua_indexing=True)
-
-            return dataset
+            return IndexedDataset(path, fix_lua_indexing=True)
 
         pair_datasets = OrderedDict()
 
@@ -313,7 +310,7 @@ class LaserTask(LegacyFairseqTask):
                 required_batch_size_multiple=required_batch_size_multiple,
             )
 
-        epoch_iter = MultidatasetEpochBatchIterator(
+        return MultidatasetEpochBatchIterator(
             dataset=dataset,
             batch_sampler=batch_sampler,
             seed=seed,
@@ -322,5 +319,3 @@ class LaserTask(LegacyFairseqTask):
             num_workers=num_workers,
             epoch=epoch,
         )
-
-        return epoch_iter

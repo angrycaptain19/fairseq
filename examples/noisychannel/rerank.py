@@ -56,11 +56,7 @@ def score_target_hypo(
             # length is measured in terms of words, not bpe tokens, since models may not share the same bpe
             target_len = len(bitext1.rescore_hypo[i].split())
 
-            if lm_res is not None:
-                lm_score = lm_res.score[i]
-            else:
-                lm_score = 0
-
+            lm_score = lm_res.score[i] if lm_res is not None else 0
             if bitext2 is not None:
                 bitext2_score = bitext2.rescore_score[i]
                 bitext2_backwards = bitext2.backwards
@@ -88,7 +84,7 @@ def score_target_hypo(
                 best_score = score
                 best_hypo = bitext1.rescore_hypo[i]
 
-            if j == gen_output.num_hypos[i] or j == args.num_rescore:
+            if j in [gen_output.num_hypos[i], args.num_rescore]:
                 j = 1
                 hypo_lst.append(best_hypo)
                 score_lst.append(best_score)
@@ -113,16 +109,13 @@ def score_target_hypo(
                     + str(gen_output.no_bpe_hypo[key])
                 )
                 sys_tok = dict.encode_line(hypo_lst[key])
-                ref_tok = dict.encode_line(gen_output.no_bpe_target[gen_keys[key]])
-                scorer.add(ref_tok, sys_tok)
-
             else:
                 full_hypo = rerank_utils.get_full_from_prefix(
                     hypo_lst[key], gen_output.no_bpe_hypo[gen_keys[key]]
                 )
                 sys_tok = dict.encode_line(full_hypo)
-                ref_tok = dict.encode_line(gen_output.no_bpe_target[gen_keys[key]])
-                scorer.add(ref_tok, sys_tok)
+            ref_tok = dict.encode_line(gen_output.no_bpe_target[gen_keys[key]])
+            scorer.add(ref_tok, sys_tok)
 
         # if only one set of hyper parameters is provided, write the predictions to a file
         if write_hypos:
@@ -137,18 +130,14 @@ def score_target_hypo(
                         + str(gen_output.no_bpe_hypo[key])
                     )
                     ordered_hypos[gen_keys[key]] = hypo_lst[key]
-                    ordered_targets[gen_keys[key]] = gen_output.no_bpe_target[
-                        gen_keys[key]
-                    ]
-
                 else:
                     full_hypo = rerank_utils.get_full_from_prefix(
                         hypo_lst[key], gen_output.no_bpe_hypo[gen_keys[key]]
                     )
                     ordered_hypos[gen_keys[key]] = full_hypo
-                    ordered_targets[gen_keys[key]] = gen_output.no_bpe_target[
-                        gen_keys[key]
-                    ]
+                ordered_targets[gen_keys[key]] = gen_output.no_bpe_target[
+                    gen_keys[key]
+                ]
 
     # write the hypos in the original order from nbest list generation
     if args.num_shards == (len(bitext1_lst)):
@@ -201,23 +190,7 @@ def match_target_hypo(args, target_outfile, hypo_outfile):
                 ],
             )
 
-    if len(rerank_scores) > 1:
-        best_index = np.argmax(rerank_scores)
-        best_score = rerank_scores[best_index]
-        print("best score", best_score)
-        print("best lenpen", args.lenpen[best_index])
-        print("best weight1", args.weight1[best_index])
-        print("best weight2", args.weight2[best_index])
-        print("best weight3", args.weight3[best_index])
-        return (
-            args.lenpen[best_index],
-            args.weight1[best_index],
-            args.weight2[best_index],
-            args.weight3[best_index],
-            best_score,
-        )
-
-    else:
+    if len(rerank_scores) <= 1:
         return (
             args.lenpen[0],
             args.weight1[0],
@@ -225,6 +198,21 @@ def match_target_hypo(args, target_outfile, hypo_outfile):
             args.weight3[0],
             rerank_scores[0],
         )
+
+    best_index = np.argmax(rerank_scores)
+    best_score = rerank_scores[best_index]
+    print("best score", best_score)
+    print("best lenpen", args.lenpen[best_index])
+    print("best weight1", args.weight1[best_index])
+    print("best weight2", args.weight2[best_index])
+    print("best weight3", args.weight3[best_index])
+    return (
+        args.lenpen[best_index],
+        args.weight1[best_index],
+        args.weight2[best_index],
+        args.weight3[best_index],
+        best_score,
+    )
 
 
 def load_score_files(args):

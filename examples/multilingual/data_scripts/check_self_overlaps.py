@@ -18,8 +18,7 @@ if WORKDIR_ROOT is None or  not WORKDIR_ROOT.strip():
 
 def get_directions(folder):
     raw_files = glob.glob(f'{folder}/train*')
-    directions = [os.path.split(file_path)[-1].split('.')[1] for file_path in raw_files] 
-    return directions   
+    return [os.path.split(file_path)[-1].split('.')[1] for file_path in raw_files]   
 
 def diff_list(lhs, rhs):
     return set(lhs).difference(set(rhs))
@@ -43,10 +42,9 @@ def check_diff(
     common_src = 0
     common_tgt = 0
     to_count = 0
-    seen = set()
+    with open(to_src_file, encoding='utf-8') as fsrc, open(to_tgt_file, encoding='utf-8') as ftgt:
+        seen = set()
 
-    with open(to_src_file, encoding='utf-8') as fsrc, \
-        open(to_tgt_file, encoding='utf-8') as ftgt:
         for s, t in zip(fsrc, ftgt):
             to_count += 1
             if (s, t) not in seen:

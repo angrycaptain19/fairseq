@@ -239,9 +239,7 @@ class NoisyChannelSequenceGenerator(object):
             possible score among unfinalized hypotheses.
             """
             assert len(finalized[sent]) <= beam_size
-            if len(finalized[sent]) == beam_size:
-                return True
-            return False
+            return len(finalized[sent]) == beam_size
 
         def finalize_hypos(step, bbsz_idx, eos_scores, combined_noisy_channel_eos_scores):
             """

@@ -9,7 +9,6 @@ def filter_overpunc(len_npunc, len_sen):
     return len_npunc < 0.5*len_sen
 
 def main(args):
-    punc = punctuation + "—|–"
     print('Processing file {}'.format(args.input))
     with gzip.open(args.input, 'rt', encoding=args.encoding) as tsv:
         with open(args.bitext + '.' + args.src_lang, 'wt', encoding=args.encoding) as fsrc:
@@ -19,6 +18,7 @@ def main(args):
 
                 src, tgt = fields[1], fields[2]
 
+                punc = punctuation + "—|–"
                 nchar_npunc_src = len_no_punc(src, punc)
                 nchar_npunc_tgt = len_no_punc(tgt, punc)
 

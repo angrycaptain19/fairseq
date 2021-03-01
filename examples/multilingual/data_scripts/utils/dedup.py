@@ -7,12 +7,9 @@
 import argparse
 
 def deup(src_file, tgt_file, src_file_out, tgt_file_out):
-    seen = set()
     dup_count = 0
-    with open(src_file, encoding='utf-8') as fsrc, \
-        open(tgt_file, encoding='utf-8') as ftgt, \
-        open(src_file_out, 'w', encoding='utf-8') as fsrc_out, \
-        open(tgt_file_out, 'w', encoding='utf-8') as ftgt_out:
+    with open(src_file, encoding='utf-8') as fsrc, open(tgt_file, encoding='utf-8') as ftgt, open(src_file_out, 'w', encoding='utf-8') as fsrc_out, open(tgt_file_out, 'w', encoding='utf-8') as ftgt_out:
+        seen = set()
         for s, t in zip(fsrc, ftgt):
             if (s, t) not in seen:
                 fsrc_out.write(s)

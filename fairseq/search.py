@@ -293,7 +293,6 @@ class LexicallyConstrainedBeamSearch(Search):
             constraints: (batch, output beam size)
                 the new constraint states
         """
-        each_k = 1
         device = lprobs.device
 
         batch_size, beam_size, vocab_size = lprobs.size()
@@ -344,6 +343,7 @@ class LexicallyConstrainedBeamSearch(Search):
 
         # STEP 1: get top-1 from each hypothesis across all sentences in the batch
         if step > 0:
+            each_k = 1
             top_scores, top_indices = torch.topk(
                 lprobs.view(batch_size * beam_size, -1),
                 k=each_k,

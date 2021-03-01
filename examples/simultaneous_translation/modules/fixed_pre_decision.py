@@ -33,15 +33,14 @@ def fixed_pooling_monotonic_attention(monotonic_attention):
                     def last(key):
                         if key.size(2) < self.pre_decision_ratio:
                             return key
-                        else:
-                            k = key[
-                                :,
-                                :,
-                                self.pre_decision_ratio - 1 :: self.pre_decision_ratio,
-                            ].contiguous()
-                            if key.size(-1) % self.pre_decision_ratio != 0:
-                                k = torch.cat([k, key[:, :, -1:]], dim=-1).contiguous()
-                            return k
+                        k = key[
+                            :,
+                            :,
+                            self.pre_decision_ratio - 1 :: self.pre_decision_ratio,
+                        ].contiguous()
+                        if key.size(-1) % self.pre_decision_ratio != 0:
+                            k = torch.cat([k, key[:, :, -1:]], dim=-1).contiguous()
+                        return k
 
                     self.pooling_layer = last
                 else:

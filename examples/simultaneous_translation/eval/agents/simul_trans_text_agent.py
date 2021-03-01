@@ -21,9 +21,7 @@ class SimulTransTextAgent(SimulTransAgent):
         )
 
     def load_dictionary(self, task):
-        self.dict = {}
-        self.dict["tgt"] = task.target_dictionary
-        self.dict["src"] = task.source_dictionary
+        self.dict = {"tgt": task.target_dictionary, "src": task.source_dictionary}
 
     def update_states(self, states, new_state):
         if states["finish_read"]:

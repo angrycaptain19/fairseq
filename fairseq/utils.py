@@ -306,7 +306,7 @@ def multi_tensor_total_norm(grads, chunk_size=2048 * 32) -> torch.Tensor:
             cur_device_grads = []
             per_device_grads[device] = cur_device_grads
         cur_device_grads.append(grad)
-    for device in per_device_grads.keys():
+    for device in per_device_grads:
         cur_device_grads = per_device_grads[device]
         if device.type == "cuda":
             # TODO(msb) return has_inf
@@ -318,8 +318,7 @@ def multi_tensor_total_norm(grads, chunk_size=2048 * 32) -> torch.Tensor:
             norms.append(norm[0].to(torch.cuda.current_device()))
         else:
             norms += [torch.norm(g, p=2, dtype=torch.float32) for g in cur_device_grads]
-    total_norm = torch.norm(torch.stack(norms))
-    return total_norm
+    return torch.norm(torch.stack(norms))
 
 
 @torch.no_grad()
@@ -328,8 +327,8 @@ def clip_grad_norm_(params, max_norm, aggregate_norm_fn=None) -> torch.Tensor:
         params = [params]
     params = list(params)
     grads = [p.grad.detach() for p in filter(lambda p: p.grad is not None, params)]
-    if len(grads) == 0:
-        if len(params) > 0:
+    if not grads:
+        if params:
             return params[0].new_tensor(0.0)
         else:
             return torch.tensor(0.0)
@@ -400,18 +399,13 @@ def resolve_max_positions(*args):
     def map_value_update(d1, d2):
         updated_value = copy.deepcopy(d1)
         for key in d2:
-            if key not in updated_value:
-                updated_value[key] = d2[key]
-            else:
-                updated_value[key] = min(d1[key], d2[key])
+            updated_value[key] = min(d1[key], d2[key]) if key in updated_value else d2[key]
         return updated_value
 
     def nullsafe_min(l):
         minim = None
         for item in l:
-            if minim is None:
-                minim = item
-            elif item is not None and item < minim:
+            if minim is None or item is not None and item < minim:
                 minim = item
         return minim
 
@@ -454,15 +448,15 @@ def import_user_module(args):
             import_user_module.memo.add(module_path)
 
             module_parent, module_name = os.path.split(module_path)
-            if module_name not in sys.modules:
-                sys.path.insert(0, module_parent)
-                importlib.import_module(module_name)
-            else:
+            if module_name in sys.modules:
                 raise ImportError(
                     "Failed to import --user-dir={} because the corresponding module name "
                     "({}) is not globally unique. Please rename the directory to "
                     "something unique and try again.".format(module_path, module_name)
                 )
+
+            sys.path.insert(0, module_parent)
+            importlib.import_module(module_name)
 
 
 def softmax(x, dim: int, onnx_trace: bool = False):
@@ -605,8 +599,7 @@ def get_token_to_word_mapping(tokens, exclude_list):
     n = len(tokens)
     word_start = [int(token not in exclude_list) for token in tokens]
     word_idx = list(accumulate(word_start))
-    token_to_word = {i: word_idx[i] for i in range(n)}
-    return token_to_word
+    return {i: word_idx[i] for i in range(n)}
 
 
 def extract_hard_alignment(attn, src_sent, tgt_sent, pad, eos):

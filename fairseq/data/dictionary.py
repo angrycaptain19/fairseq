@@ -116,13 +116,13 @@ class Dictionary:
         if word in self.indices and not overwrite:
             idx = self.indices[word]
             self.count[idx] = self.count[idx] + n
-            return idx
         else:
             idx = len(self.symbols)
             self.indices[word] = idx
             self.symbols.append(word)
             self.count.append(n)
-            return idx
+
+        return idx
 
     def update(self, new_dict):
         """Updates counts from new dictionary."""
@@ -306,10 +306,7 @@ class Dictionary:
         ids = torch.IntTensor(nwords + 1 if append_eos else nwords)
 
         for i, word in enumerate(words):
-            if add_if_not_exist:
-                idx = self.add_symbol(word)
-            else:
-                idx = self.index(word)
+            idx = self.add_symbol(word) if add_if_not_exist else self.index(word)
             if consumer is not None:
                 consumer(word, idx)
             ids[i] = idx

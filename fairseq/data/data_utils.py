@@ -105,7 +105,7 @@ def load_indexed_dataset(
         datasets.append(dataset)
         if not combine:
             break
-    if len(datasets) == 0:
+    if not datasets:
         return None
     elif len(datasets) == 1:
         return datasets[0]
@@ -152,7 +152,7 @@ def _filter_by_size_dynamic(indices, size_fn, max_positions, raise_exception=Fal
         return a <= b if not isinstance(a, tuple) else max(a) <= b
 
     def check_size(idx):
-        if isinstance(max_positions, float) or isinstance(max_positions, int):
+        if isinstance(max_positions, (float, int)):
             return size_fn(idx) <= max_positions
         elif isinstance(max_positions, dict):
             idx_size = size_fn(idx)
@@ -198,7 +198,7 @@ def filter_by_size(indices, dataset, max_positions, raise_exception=False):
         "Use `FairseqDataset::filter_indices_by_size` instead.",
         stacklevel=2,
     )
-    if isinstance(max_positions, float) or isinstance(max_positions, int):
+    if isinstance(max_positions, (float, int)):
         if hasattr(dataset, "sizes") and isinstance(dataset.sizes, np.ndarray):
             ignored = indices[dataset.sizes[indices] > max_positions].tolist()
             indices = indices[dataset.sizes[indices] <= max_positions]
